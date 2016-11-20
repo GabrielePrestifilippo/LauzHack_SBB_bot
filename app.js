@@ -111,7 +111,10 @@ dialog.matches('search train', [
 
 
             httpreq.get(myRequest, function (err, res) {
-                if (err) return console.log(err);
+                if (err) {
+                    return console.log(err);
+                    session.send(err);
+                }
                 var mybody = JSON.parse(res.body);
 
                 session.send("Solutions:");
