@@ -106,9 +106,6 @@ dialog.matches('search train', [
             session.sendTyping();
 
 
-            session.send(myRequest);
-            session.send("sent mex");
-
 
             httpreq.get(myRequest, function (err, res) {
                 if (err) {
@@ -116,43 +113,23 @@ dialog.matches('search train', [
                     session.send(err);
                 }
                 var mybody = JSON.parse(res.body);
-                session.send("req Done:");
-/*
+                try {
+                    session.send("There are " + mybody.connections.length + " solutions");
+                    session.dialogData.tickets = mybody.connections;
+                    for (var x = 0; x < mybody.connections.length; x++) {
 
-                session.send("There are " + mybody.connections.length + " solutions");
-                session.dialogData.tickets = mybody.connections;
-                for (var x = 0; x < mybody.connections.length; x++) {
+                        var mySolutions = printSolution(mybody.connections[x]);
+                        session.send((x + 1) + ") " + mySolutions);
 
-                    var mySolutions = printSolution(mybody.connections[x]);
-                    session.send((x + 1) + ") " + mySolutions);
-
+                    }
+                    console.log("now next");
+                    next();
+                }catch(e){
+                    session.send(JSON.stringify(e));
                 }
-                console.log("now next");
-                next();
-                */
 
             });
-            /*
-             requestify.get(myRequest)
-             .then(function (response) {
-             console.log("XHR");
-             session.send("Solutions:");
-             session.send("There are " + response.getBody().connections.length + " solutions");
-             session.dialogData.tickets = response.getBody().connections;
-             for (var x = 0; x < response.getBody().connections.length; x++) {
 
-             var mySolutions = printSolution(response.getBody().connections[x]);
-             session.send((x + 1) + ") " + mySolutions);
-
-             }
-             console.log("now next");
-             next();
-             }).catch(function(err){
-             console.log('Requestify Error', err);
-             session.send(err);
-             next(err);
-             });
-             */
         } else {
             session.send('Sorry, I cannot help you');
         }
