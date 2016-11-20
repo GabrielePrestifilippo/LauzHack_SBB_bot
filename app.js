@@ -91,7 +91,7 @@ dialog.matches('search train', [
 
                 session.dialogData.timestamp = session.dialogData.timestamp.toISOString();
             }
-            var myRequest = 'http://transport.opendata.ch/v1/connections?from=' +
+            var myRequest = 'https://transport.opendata.ch/v1/connections?from=' +
                 session.dialogData.source +
                 '&to=' + session.dialogData.destination +
                 '&datetime=' +
@@ -102,10 +102,13 @@ dialog.matches('search train', [
                 session.dialogData.destination + " " + session.dialogData.when + "...");
             session.sendTyping();
 
-            console.log("sent mex");
+
+            session.send(myRequest);
+            session.send("sent mex");
             requestify.get(myRequest)
                 .then(function (response) {
                     console.log("XHR");
+                    session.send("Solutions:");
                     session.send("There are " + response.getBody().connections.length + " solutions");
                     session.dialogData.tickets = response.getBody().connections;
                     for (var x = 0; x < response.getBody().connections.length; x++) {
@@ -139,7 +142,7 @@ dialog.matches('search train', [
             var urlLink = 'If you want to buy the ticket, go here: ';
             urlLink += 'https://int-www.sbb.ch/ticketshop/b2c/adw.do?artikelnummer=125&von=';
             urlLink += session.dialogData.source;
-            urlLink + '&nach=';
+            urlLink += '&nach=';
             urlLink += session.dialogData.destination;
             urlLink += '&reiseDatum=';
             urlLink += session.dialogData.timestamp;
