@@ -3,6 +3,9 @@ var builder = require('botbuilder');
 var intents = new builder.IntentDialog();
 var requestify = require('requestify');
 var httpreq = require('httpreq');
+
+
+var https = require('https');
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
@@ -94,7 +97,7 @@ dialog.matches('search train', [
 
                 session.dialogData.timestamp = session.dialogData.timestamp.toISOString();
             }
-            var myRequest = 'https://transport.opendata.ch/v1/connections?from=' +
+            var myRequest = '/v1/connections?from=' +
                 session.dialogData.source +
                 '&to=' + session.dialogData.destination +
                 '&datetime=' +
@@ -106,33 +109,60 @@ dialog.matches('search train', [
             session.sendTyping();
 
 
-            try {
-                httpreq.get(myRequest, function (err, res) {
-                    if (err) {
-                        return console.log(err);
-                        session.send(err);
-                    }
-                    var mybody = JSON.parse(res.body);
-                    try {
-                        session.send("There are " + mybody.connections.length + " solutions");
-                        session.dialogData.tickets = mybody.connections;
-                        for (var x = 0; x < mybody.connections.length; x++) {
+            console.log("https://transport.opendata.ch/" + myRequest);
 
-                            var mySolutions = printSolution(mybody.connections[x]);
-                            session.send((x + 1) + ") " + mySolutions);
+            var options = {
+                host: 'transport.opendata.ch',
+                path: myRequest,
+                method: 'GET',
+                headers: {
+                    accept: '*/*'
+                }
+            };
 
-                        }
-                        console.log("now next");
-                        next();
-                    } catch (e) {
-                        session.send(JSON.stringify(e));
-                    }
+            var req = https.request(options, function (res) {
+                console.log(res.statusCode);
+                res.on('data', function (d) {
 
+                    session.send("req success");
                 });
-            }
-            catch (e) {
-                session.send(JSON.stringify(e));
-            }
+            });
+            req.end();
+
+            req.on('error', function (e) {
+                session.send("error");
+                console.log(e);
+            });
+
+            /*
+             try {
+             httpreq.get(myRequest, function (err, res) {
+             if (err) {
+             return console.log(err);
+             session.send(err);
+             }
+             var mybody = JSON.parse(res.body);
+             try {
+             session.send("There are " + mybody.connections.length + " solutions");
+             session.dialogData.tickets = mybody.connections;
+             for (var x = 0; x < mybody.connections.length; x++) {
+
+             var mySolutions = printSolution(mybody.connections[x]);
+             session.send((x + 1) + ") " + mySolutions);
+
+             }
+             console.log("now next");
+             next();
+             } catch (e) {
+             session.send(JSON.stringify(e));
+             }
+
+             });
+             }
+             catch (e) {
+             session.send(JSON.stringify(e));
+             }
+             */
 
         } else {
             session.send('Sorry, I cannot help you');
@@ -152,8 +182,8 @@ dialog.matches('search train', [
                 var mySolutions = printProductSolution(session.dialogData.tickets[numberChosen - 1].sections[x]);
                 session.send(mySolutions);
             }
-            var urlLink = 'If you want to buy the ticket, go here: ';
-            urlLink += 'https://int-www.sbb.ch/ticketshop/b2c/adw.do?artikelnummer=125&von=';
+
+            var urlLink = 'https://int-www.sbb.ch/ticketshop/b2c/adw.do?artikelnummer=125&von=';
             urlLink += session.dialogData.source;
             urlLink += '&nach=';
             urlLink += session.dialogData.destination;
