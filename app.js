@@ -110,7 +110,7 @@ dialog.matches('search train', [
             session.send("sent mex");
 
 
-            httpreq.get('https://jsonplaceholder.typicode.com/posts/1', function (err, res) {
+            httpreq.get(myRequest, function (err, res) {
                 if (err) {
                     return console.log(err);
                     session.send(err);
