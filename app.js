@@ -98,44 +98,81 @@ dialog.matches('search train', [
 
                 session.dialogData.timestamp = session.dialogData.timestamp.toISOString();
             }
-            var myRequest = 'https://transport.opendata.ch' + '/v1/connections?from=' +
+            //'https://transport.opendata.ch' +
+            var myRequest = '/v1/connections?from=' +
                 session.dialogData.source +
                 '&to=' + session.dialogData.destination +
                 '&datetime=' +
                 session.dialogData.timestamp;
-            console.log(myRequest);
+
 
             session.send('Good! let me find you how to go from ' + session.dialogData.source + ' to ' +
                 session.dialogData.destination + " " + session.dialogData.when + "...");
             session.sendTyping();
 
 
-            console.log("https://transport.opendata.ch" + myRequest);
+            console.log("ransport.opendata.ch" + myRequest);
 
-            httpRequest.get({
-                url: myRequest
-            }, function (err, response, body) {
-                if (err) {
-                    request.respond(statusCodes.INTERNAL_SERVER_ERROR,
-                        'Unable to connect to twitter.');
-                } else if (response.statusCode !== 200) {
-                    conso.log("error")
-                } else {
-
-                    body = JSON.parse(body);
-
-                    session.send("There are " + body.connections.length + " solutions");
-                    session.dialogData.tickets = body.connections;
-                    for (var x = 0; x < body.connections.length; x++) {
-                        var mySolutions = printSolution(body.connections[x]);
-                        session.send((x + 1) + ") " + mySolutions);
-
-                    }
-                    console.log("now next");
-                    next();
+            var https = require('https');
+            var bodyReq = [];
+            var options = {
+                host: 'transport.opendata.ch',
+                path: myRequest,
+                method: 'GET',
+                headers: {
+                    accept: '*/*'
                 }
+            };
+
+            var req = https.request(options, function (res) {
+                console.log(res.statusCode);
+                res.on('data', function (chunk) {
+                    bodyReq.push(chunk);
+                });
+
+                res.on('end', function () {
+                    bodyReq = Buffer.concat(bodyReq).toString();
+                    bodyReq = JSON.parse(bodyReq);
+                    session.send("There are " + bodyReq.connections.length + " solutions");
+                    session.dialogData.tickets = bodyReq.connections;
+                    for (var x = 0; x < bodyReq.connections.length; x++) {
+                        var mySolutions = printSolution(bodyReq.connections[x]);
+                        session.send((x + 1) + ") " + mySolutions);
+                    }
+                    next();
+                });
+            });
+            req.end();
+
+            req.on('error', function (e) {
+                console.error(e);
             });
 
+            /*
+             httpRequest.get({
+             url: myRequest
+             }, function (err, response, body) {
+             if (err) {
+             request.respond(statusCodes.INTERNAL_SERVER_ERROR,
+             'Unable to connect to twitter.');
+             } else if (response.statusCode !== 200) {
+             conso.log("error")
+             } else {
+
+             body = JSON.parse(body);
+
+             session.send("There are " + body.connections.length + " solutions");
+             session.dialogData.tickets = body.connections;
+             for (var x = 0; x < body.connections.length; x++) {
+             var mySolutions = printSolution(body.connections[x]);
+             session.send((x + 1) + ") " + mySolutions);
+
+             }
+             console.log("now next");
+             next();
+             }
+             });
+             */
 
         }
         else {
@@ -161,7 +198,8 @@ dialog.matches('search train', [
                 session.send(mySolutions);
             }
 
-            var urlLink = 'https://int-www.sbb.ch/ticketshop/b2c/adw.do?artikelnummer=125&von=';
+            var urlLink = 'Here you can buy the ticket: ';
+            urlLink = 'https://int-www.sbb.ch/ticketshop/b2c/adw.do?artikelnummer=125&von=';
             urlLink += session.dialogData.source;
             urlLink += '&nach=';
             urlLink += session.dialogData.destination;
