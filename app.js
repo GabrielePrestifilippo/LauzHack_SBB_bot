@@ -1,8 +1,12 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var intents = new builder.IntentDialog();
-var https = require('https');
+var requestify = require('requestify');
 var httpreq = require('httpreq');
+
+var httpRequest = require('request');
+
+var https = require('https');
 var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
@@ -94,7 +98,7 @@ dialog.matches('search train', [
 
                 session.dialogData.timestamp = session.dialogData.timestamp.toISOString();
             }
-            var myRequest = 'http://transport.opendata.ch' + '/v1/connections?from=' +
+            var myRequest = 'https://transport.opendata.ch' + '/v1/connections?from=' +
                 session.dialogData.source +
                 '&to=' + session.dialogData.destination +
                 '&datetime=' +
@@ -106,78 +110,31 @@ dialog.matches('search train', [
             session.sendTyping();
 
 
-            console.log(myRequest);
-            /*
-             var options = {
-             host: 'transport.opendata.ch',
-             path: myRequest,
-             method: 'GET',
-             headers: {
-             accept: '*
-             *
-             '
-             }
-             };
-             var bodyReq = [];
-             var req = https.request(options, function (res) {
-             console.log(res.statusCode);
-             res.on('data', function (d) {
-             bodyReq.push(d);
-             console.log("data");
-             });
+            console.log("https://transport.opendata.ch" + myRequest);
 
-             res.on('end', function (d) {
-             console.log("end");
-             bodyReq = Buffer.concat(bodyReq).toString();
+            httpRequest.get({
+                url: myRequest
+            }, function (err, response, body) {
+                if (err) {
+                    request.respond(statusCodes.INTERNAL_SERVER_ERROR,
+                        'Unable to connect to twitter.');
+                } else if (response.statusCode !== 200) {
+                    conso.log("error")
+                } else {
 
-             if (bodyReq.error) {
-             session.send("No solutions found");
-             session.endDialog();
-             }
-             session.send("There are " + bodyReq.connections.length + " solutions");
-             session.dialogData.tickets = bodyReq.connections;
-             for (var x = 0; x < bodyReq.connections.length; x++) {
+                    body = JSON.parse(body);
 
-             var mySolutions = printSolution(bodyReq.connections[x]);
-             session.send((x + 1) + ") " + mySolutions);
-             }
-             });
-             req.end();
+                    session.send("There are " + body.connections.length + " solutions");
+                    session.dialogData.tickets = body.connections;
+                    for (var x = 0; x < body.connections.length; x++) {
+                        var mySolutions = printSolution(body.connections[x]);
+                        session.send((x + 1) + ") " + mySolutions);
 
-             req.on('error', function (e) {
-             session.send("error");
-             body = Buffer.concat(body).toString();
-             console.log(e);
-             });
-             });
-             */
-            try {
-                httpreq.get(myRequest, function (err, res) {
-                    if (err) {
-                        return console.log(err);
-                        session.send(err);
                     }
-                    var mybody = JSON.parse(res.body);
-                    try {
-                        session.send("There are " + mybody.connections.length + " solutions");
-                        session.dialogData.tickets = mybody.connections;
-                        for (var x = 0; x < mybody.connections.length; x++) {
-
-                            var mySolutions = printSolution(mybody.connections[x]);
-                            session.send((x + 1) + ") " + mySolutions);
-
-                        }
-                        console.log("now next");
-                        next();
-                    } catch (e) {
-                        session.send(JSON.stringify(e));
-                    }
-
-                });
-            }
-            catch (e) {
-                session.send(JSON.stringify(e));
-            }
+                    console.log("now next");
+                    next();
+                }
+            });
 
 
         }
@@ -220,8 +177,7 @@ dialog.matches('search train', [
     }
 
 
-])
-;
+]);
 
 
 function printProductSolution(connection) {
