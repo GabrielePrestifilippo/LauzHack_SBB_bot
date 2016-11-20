@@ -110,14 +110,15 @@ dialog.matches('search train', [
             session.send("sent mex");
 
 
-            httpreq.get(myRequest, function (err, res) {
+            httpreq.get('https://jsonplaceholder.typicode.com/posts/1', function (err, res) {
                 if (err) {
                     return console.log(err);
                     session.send(err);
                 }
                 var mybody = JSON.parse(res.body);
+                session.send("req Done:");
+/*
 
-                session.send("Solutions:");
                 session.send("There are " + mybody.connections.length + " solutions");
                 session.dialogData.tickets = mybody.connections;
                 for (var x = 0; x < mybody.connections.length; x++) {
@@ -128,6 +129,7 @@ dialog.matches('search train', [
                 }
                 console.log("now next");
                 next();
+                */
 
             });
             /*
