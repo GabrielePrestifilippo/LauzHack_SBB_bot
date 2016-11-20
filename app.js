@@ -61,6 +61,9 @@ dialog.matches('search train', [
         var time;
         if (results.response) {
             session.dialogData.when = results.response;
+            if (typeof(session.dialogData.when) == "object") {
+                session.dialogData.when = session.dialogData.when.entity;
+            }
             console.log(results.response);
             time = builder.EntityRecognizer.resolveTime([results.response]);
 
@@ -105,6 +108,7 @@ dialog.matches('search train', [
 
             session.send(myRequest);
             session.send("sent mex");
+
             requestify.get(myRequest)
                 .then(function (response) {
                     console.log("XHR");
@@ -119,7 +123,11 @@ dialog.matches('search train', [
                     }
                     console.log("now next");
                     next();
-                });
+                }).catch(function(err){
+                console.log('Requestify Error', err);
+                session.send(err);
+                next(err);
+            });
 
         } else {
             session.send('Sorry, I cannot help you');
