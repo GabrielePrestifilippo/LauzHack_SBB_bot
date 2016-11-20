@@ -106,29 +106,33 @@ dialog.matches('search train', [
             session.sendTyping();
 
 
-
-            httpreq.get(myRequest, function (err, res) {
-                if (err) {
-                    return console.log(err);
-                    session.send(err);
-                }
-                var mybody = JSON.parse(res.body);
-                try {
-                    session.send("There are " + mybody.connections.length + " solutions");
-                    session.dialogData.tickets = mybody.connections;
-                    for (var x = 0; x < mybody.connections.length; x++) {
-
-                        var mySolutions = printSolution(mybody.connections[x]);
-                        session.send((x + 1) + ") " + mySolutions);
-
+            try {
+                httpreq.get(myRequest, function (err, res) {
+                    if (err) {
+                        return console.log(err);
+                        session.send(err);
                     }
-                    console.log("now next");
-                    next();
-                }catch(e){
-                    session.send(JSON.stringify(e));
-                }
+                    var mybody = JSON.parse(res.body);
+                    try {
+                        session.send("There are " + mybody.connections.length + " solutions");
+                        session.dialogData.tickets = mybody.connections;
+                        for (var x = 0; x < mybody.connections.length; x++) {
 
-            });
+                            var mySolutions = printSolution(mybody.connections[x]);
+                            session.send((x + 1) + ") " + mySolutions);
+
+                        }
+                        console.log("now next");
+                        next();
+                    } catch (e) {
+                        session.send(JSON.stringify(e));
+                    }
+
+                });
+            }
+            catch (e) {
+                session.send(JSON.stringify(e));
+            }
 
         } else {
             session.send('Sorry, I cannot help you');
