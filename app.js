@@ -1,13 +1,7 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var intents = new builder.IntentDialog();
-var requestify = require('requestify');
-var httpreq = require('httpreq');
 
-var httpRequest = require('request');
-
-var https = require('https');
-var server = restify.createServer();
 server.listen(process.env.port || process.env.PORT || 3978, function () {
     console.log('%s listening to %s', server.name, server.url);
 });
@@ -119,6 +113,7 @@ dialog.matches('search train', [
                 host: 'transport.opendata.ch',
                 path: myRequest,
                 method: 'GET',
+                port:80,
                 headers: {
                     accept: '*/*'
                 }
@@ -146,33 +141,8 @@ dialog.matches('search train', [
 
             req.on('error', function (e) {
                 console.error(e);
+                session.send("Sorry, we could not find available tickets");
             });
-
-            /*
-             httpRequest.get({
-             url: myRequest
-             }, function (err, response, body) {
-             if (err) {
-             request.respond(statusCodes.INTERNAL_SERVER_ERROR,
-             'Unable to connect to twitter.');
-             } else if (response.statusCode !== 200) {
-             conso.log("error")
-             } else {
-
-             body = JSON.parse(body);
-
-             session.send("There are " + body.connections.length + " solutions");
-             session.dialogData.tickets = body.connections;
-             for (var x = 0; x < body.connections.length; x++) {
-             var mySolutions = printSolution(body.connections[x]);
-             session.send((x + 1) + ") " + mySolutions);
-
-             }
-             console.log("now next");
-             next();
-             }
-             });
-             */
 
         }
         else {
